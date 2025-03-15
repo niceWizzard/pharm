@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'theme',
     'project',
     'users',
+    'medicines',
 ]
 
 MIDDLEWARE = [
