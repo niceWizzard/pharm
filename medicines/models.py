@@ -53,15 +53,33 @@ class InventoryTransaction(models.Model):
         )  # Explicitly track addition or removal
 
     def save(self, *args, **kwargs):
-        # Check if it's a new transaction
-        if not self.pk:
-            if self.transaction_type == "remove":
-                if self.item.stocks < self.quantity:
-                    raise ValueError("Not enough stock available")
-                self.item.stocks -= self.quantity
-            else:  # "add" case
-                self.item.stocks += self.quantity
-            
-            self.item.save()  # Save updated stocks
+        if self.pk:
+            # Get the existing transaction before updating
+            old_transaction = InventoryTransaction.objects.get(pk=self.pk)
 
+            # Reverse previous transaction effect
+            if old_transaction.transaction_type == "add":
+                self.item.stocks -= old_transaction.quantity
+            else:  # "remove" case
+                self.item.stocks += old_transaction.quantity
+
+        # Apply new transaction effect
+        if self.transaction_type == "add":
+            self.item.stocks += self.quantity
+        else:  # "remove" case
+            if self.item.stocks < self.quantity:
+                raise ValueError("Not enough stock available")
+            self.item.stocks -= self.quantity
+
+        self.item.save()
         super().save(*args, **kwargs)
+        
+    def delete(self, *args, **kwargs):
+        """Revert stock changes when transaction is deleted."""
+        if self.transaction_type == "add":
+            self.item.stocks -= self.quantity  # Remove added stock
+        else:  # "remove" case
+            self.item.stocks += self.quantity  # Restore removed stock
+
+        self.item.save()  # Update stock in database
+        super().delete(*args, **kwargs)

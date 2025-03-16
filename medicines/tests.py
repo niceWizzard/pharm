@@ -1,15 +1,15 @@
 import datetime
+import uuid
 from django.test import TestCase
-
-from medicines.models import InventoryItem, InventoryTransaction
+from django.core.exceptions import ValidationError
+from medicines.models import InventoryItem, InventoryTransaction, UnitType
 from users.models import CustomUser
 
-# Create your tests here.
-item_id = "123456"
 class ItemTestCase(TestCase):
     def setUp(self):
-        InventoryItem.objects.create(
-            id=item_id,
+        """Set up an inventory item for testing"""
+        self.item = InventoryItem.objects.create(
+            id=str(uuid.uuid4()),  # Ensure a valid UUID
             category="Antacids",
             subcategory="Antacid",
             item_name="Magnesium Hydroxide",
@@ -19,20 +19,26 @@ class ItemTestCase(TestCase):
             strength_per_size="400mg/5ml",
             packaging="Bottle",
             quantity=120,
-            unit_size="ml",
+            unit_size=UnitType.ML,
             date_of_delivery=datetime.date.today(),
             expiration_date=datetime.date.today(),
-            stocks=5 
+            stocks=5
         )
-        return super().setUp()
+
     def test_item_exists(self):
+        """Test if an item exists in the database"""
         item = InventoryItem.objects.get(item_name="Magnesium Hydroxide")
-        self.assertTrue(item)
+        self.assertIsNotNone(item)
+
+    def test_default_stock_value(self):
+        """Ensure stocks are initialized correctly"""
+        self.assertEqual(self.item.stocks, 5)
 
 class TransactionTestCase(TestCase):
     def setUp(self):
+        """Set up an inventory item and user for transactions"""
         self.item = InventoryItem.objects.create(
-            id=item_id,
+            id=str(uuid.uuid4()),  # Ensure a valid UUID
             category="Antacids",
             subcategory="Antacid",
             item_name="Magnesium Hydroxide",
@@ -42,28 +48,106 @@ class TransactionTestCase(TestCase):
             strength_per_size="400mg/5ml",
             packaging="Bottle",
             quantity=120,
-            unit_size="ml",
+            unit_size=UnitType.ML,
             date_of_delivery=datetime.date.today(),
             expiration_date=datetime.date.today(),
-            stocks=5 
+            stocks=5
         )
         self.user = CustomUser.objects.create_user(
-            "test_email",
-            "1234",
+            email="test_email@example.com",
+            password="1234"
         )
-        
-        return super().setUp()
 
-    
     def test_item_modified(self):
+        """Test that adding stock increases the item's stock count"""
         InventoryTransaction.objects.create(
             item=self.item,
             user=self.user,
             quantity=5,
             transaction_type="add",
         )
-        modified_item = InventoryItem.objects.get(id=item_id)
+        modified_item = InventoryItem.objects.get(id=self.item.id)
+        self.assertEqual(modified_item.stocks, 10)
+
+    def test_transaction_removes_stock_correctly(self):
+        """Test that removing stock decreases the item's stock count"""
+        InventoryTransaction.objects.create(
+            item=self.item,
+            user=self.user,
+            quantity=3,
+            transaction_type="remove",
+        )
+        modified_item = InventoryItem.objects.get(id=self.item.id)
+        self.assertEqual(modified_item.stocks, 2)
+
+    def test_transaction_fails_when_insufficient_stock(self):
+        """Test that removing more stock than available raises an error"""
+        with self.assertRaises(ValueError) as e:
+            InventoryTransaction.objects.create(
+                item=self.item,
+                user=self.user,
+                quantity=10,  # More than available stocks
+                transaction_type="remove",
+            )
+        self.assertEqual(str(e.exception), "Not enough stock available")
+
+    def test_multiple_transactions_affect_stock_correctly(self):
+        """Test multiple transactions updating stock properly"""
+        InventoryTransaction.objects.create(
+            item=self.item,
+            user=self.user,
+            quantity=2,
+            transaction_type="add",
+        )
+        InventoryTransaction.objects.create(
+            item=self.item,
+            user=self.user,
+            quantity=3,
+            transaction_type="remove",
+        )
+        modified_item = InventoryItem.objects.get(id=self.item.id)
+        self.assertEqual(modified_item.stocks, 4)  # 5 + 2 - 3 = 4
+
+    def test_transaction_modification_changes_stock(self):
+        transaction = InventoryTransaction.objects.create(
+            item=self.item,
+            user=self.user,
+            quantity=2,
+            transaction_type="add",
+        )
+        transaction.quantity = 5
+        transaction.save()
+        
+        modified_item = InventoryItem.objects.get(id=self.item.id)
+        self.assertEqual(modified_item.stocks, 5+5)
+
+        transaction.quantity = 7
+        transaction.save()
+        modified_item = InventoryItem.objects.get(id=self.item.id)
+        self.assertEqual(modified_item.stocks, 5+7)
+
+    def test_transaction_deletion_changes_stock(self):
+        transaction = InventoryTransaction.objects.create(
+            item=self.item,
+            user=self.user,
+            quantity=2,
+            transaction_type="add",
+        )
+        transaction.delete()
+
+        modified_item = InventoryItem.objects.get(id=self.item.id)
+        self.assertEqual(modified_item.stocks, 5)
+
+    def test_item_deletion_cascades(self):
+        transaction = InventoryTransaction.objects.create(
+            item=self.item,
+            user=self.user,
+            quantity=2,
+            transaction_type="add",
+        )
+        self.item.delete()
+
         self.assertEqual(
-            modified_item.stocks, 
-            10,
+            0,
+            InventoryTransaction.objects.all().count(),
         )
