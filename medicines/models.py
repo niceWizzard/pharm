@@ -46,11 +46,13 @@ class InventoryItem(models.Model):
 
 
 class InventoryTransaction(models.Model):
+    ADD = "add"
+    REMOVE = "remove"
     item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     quantity = models.IntegerField()
     transaction_type = models.CharField(
-            max_length=10, choices=[("add", "Add"), ("remove", "Remove")]
+            max_length=10, choices=[(ADD, "Add"), (REMOVE, "Remove")]
         )  # Explicitly track addition or removal
 
     @transaction.atomic
@@ -61,18 +63,18 @@ class InventoryTransaction(models.Model):
 
             # Reverse previous transaction effect
             match old_transaction.transaction_type:
-                case "add":
+                case self.ADD:
                     self.item.stocks -= old_transaction.quantity
-                case "remove":
+                case self.REMOVE:
                     self.item.stocks += old_transaction.quantity
                 case _:
                     raise ValueError(f"Invalid transaction type: {self.transaction_type}")
 
         # Apply new transaction effect
         match self.transaction_type:
-            case "add":
+            case self.ADD:
                 self.item.stocks += self.quantity
-            case "remove":
+            case self.REMOVE:
                 if self.item.stocks < self.quantity:
                     raise ValueError("Not enough stock available")
                 self.item.stocks -= self.quantity
@@ -86,9 +88,9 @@ class InventoryTransaction(models.Model):
     def delete(self, *args, **kwargs):
         """Revert stock changes when transaction is deleted."""
         match self.transaction_type:
-            case "add":
+            case self.ADD:
                 self.item.stocks -= self.quantity  # Remove added stock
-            case "remove":
+            case self.REMOVE:
                 self.item.stocks += self.quantity  # Restore removed stock
             case _:
                 raise ValueError(f"Invalid transaction type: {self.transaction_type}")

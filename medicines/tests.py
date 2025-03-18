@@ -64,7 +64,7 @@ class TransactionTestCase(TestCase):
             item=self.item,
             user=self.user,
             quantity=5,
-            transaction_type="add",
+            transaction_type=InventoryTransaction.ADD,
         )
         modified_item = InventoryItem.objects.get(id=self.item.id)
         self.assertEqual(modified_item.stocks, 10)
@@ -75,7 +75,7 @@ class TransactionTestCase(TestCase):
             item=self.item,
             user=self.user,
             quantity=3,
-            transaction_type="remove",
+            transaction_type=InventoryTransaction.REMOVE,
         )
         modified_item = InventoryItem.objects.get(id=self.item.id)
         self.assertEqual(modified_item.stocks, 2)
@@ -87,7 +87,7 @@ class TransactionTestCase(TestCase):
                 item=self.item,
                 user=self.user,
                 quantity=10,  # More than available stocks
-                transaction_type="remove",
+                transaction_type=InventoryTransaction.REMOVE,
             )
         self.assertEqual(str(e.exception), "Not enough stock available")
 
@@ -97,13 +97,13 @@ class TransactionTestCase(TestCase):
             item=self.item,
             user=self.user,
             quantity=2,
-            transaction_type="add",
+            transaction_type=InventoryTransaction.ADD,
         )
         InventoryTransaction.objects.create(
             item=self.item,
             user=self.user,
             quantity=3,
-            transaction_type="remove",
+            transaction_type=InventoryTransaction.REMOVE,
         )
         modified_item = InventoryItem.objects.get(id=self.item.id)
         self.assertEqual(modified_item.stocks, 4)  # 5 + 2 - 3 = 4
@@ -113,7 +113,7 @@ class TransactionTestCase(TestCase):
             item=self.item,
             user=self.user,
             quantity=2,
-            transaction_type="add",
+            transaction_type=InventoryTransaction.ADD,
         )
         transaction.quantity = 5
         transaction.save()
@@ -131,7 +131,7 @@ class TransactionTestCase(TestCase):
             item=self.item,
             user=self.user,
             quantity=2,
-            transaction_type="add",
+            transaction_type=InventoryTransaction.ADD,
         )
         transaction.delete()
 
@@ -143,7 +143,7 @@ class TransactionTestCase(TestCase):
             item=self.item,
             user=self.user,
             quantity=2,
-            transaction_type="add",
+            transaction_type=InventoryTransaction.ADD,
         )
         self.item.delete()
 
@@ -158,7 +158,7 @@ class TransactionTestCase(TestCase):
                 item=self.item,
                 user=self.user,
                 quantity=10,
-                transaction_type="remove",
+                transaction_type=InventoryTransaction.REMOVE,
             )
     
 
