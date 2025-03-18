@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.db import transaction
 
 User = get_user_model()
 
@@ -52,6 +53,7 @@ class InventoryTransaction(models.Model):
             max_length=10, choices=[("add", "Add"), ("remove", "Remove")]
         )  # Explicitly track addition or removal
 
+    @transaction.atomic
     def save(self, *args, **kwargs):
         if self.pk:
             # Get the existing transaction before updating
@@ -73,7 +75,8 @@ class InventoryTransaction(models.Model):
 
         self.item.save()
         super().save(*args, **kwargs)
-        
+    
+    @transaction.atomic
     def delete(self, *args, **kwargs):
         """Revert stock changes when transaction is deleted."""
         if self.transaction_type == "add":
