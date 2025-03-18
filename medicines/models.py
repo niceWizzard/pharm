@@ -60,18 +60,24 @@ class InventoryTransaction(models.Model):
             old_transaction = InventoryTransaction.objects.get(pk=self.pk)
 
             # Reverse previous transaction effect
-            if old_transaction.transaction_type == "add":
-                self.item.stocks -= old_transaction.quantity
-            else:  # "remove" case
-                self.item.stocks += old_transaction.quantity
+            match old_transaction.transaction_type:
+                case "add":
+                    self.item.stocks -= old_transaction.quantity
+                case "remove":
+                    self.item.stocks += old_transaction.quantity
+                case _:
+                    raise ValueError(f"Invalid transaction type: {self.transaction_type}")
 
         # Apply new transaction effect
-        if self.transaction_type == "add":
-            self.item.stocks += self.quantity
-        else:  # "remove" case
-            if self.item.stocks < self.quantity:
-                raise ValueError("Not enough stock available")
-            self.item.stocks -= self.quantity
+        match self.transaction_type:
+            case "add":
+                self.item.stocks += self.quantity
+            case "remove":
+                if self.item.stocks < self.quantity:
+                    raise ValueError("Not enough stock available")
+                self.item.stocks -= self.quantity
+            case _:
+                raise ValueError(f"Invalid transaction type: {self.transaction_type}")
 
         self.item.save()
         super().save(*args, **kwargs)
@@ -79,10 +85,14 @@ class InventoryTransaction(models.Model):
     @transaction.atomic
     def delete(self, *args, **kwargs):
         """Revert stock changes when transaction is deleted."""
-        if self.transaction_type == "add":
-            self.item.stocks -= self.quantity  # Remove added stock
-        else:  # "remove" case
-            self.item.stocks += self.quantity  # Restore removed stock
+        match self.transaction_type:
+            case "add":
+                self.item.stocks -= self.quantity  # Remove added stock
+            case "remove":
+                self.item.stocks += self.quantity  # Restore removed stock
+            case _:
+                raise ValueError(f"Invalid transaction type: {self.transaction_type}")
+
 
         self.item.save()  # Update stock in database
         super().delete(*args, **kwargs)

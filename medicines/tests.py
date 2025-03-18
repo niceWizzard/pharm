@@ -161,3 +161,13 @@ class TransactionTestCase(TestCase):
                 transaction_type="remove",
             )
     
+
+    def test_invalid_transaction_type_raise_error(self):
+        with self.assertRaises(ValueError):
+            InventoryTransaction.objects.create(
+                item=self.item,
+                user=self.user,
+                quantity=1,
+                transaction_type="asdf",
+            )
+
