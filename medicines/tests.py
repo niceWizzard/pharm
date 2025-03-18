@@ -151,3 +151,13 @@ class TransactionTestCase(TestCase):
             0,
             InventoryTransaction.objects.all().count(),
         )
+
+    def test_not_enough_stock_error_raise(self):
+        with self.assertRaises(ValueError):
+            InventoryTransaction.objects.create(
+                item=self.item,
+                user=self.user,
+                quantity=10,
+                transaction_type="remove",
+            )
+    
