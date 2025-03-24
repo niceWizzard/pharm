@@ -195,7 +195,6 @@ class TransactionTestCase(TestCase):
                 transaction_type=InventoryTransaction.REMOVE,
             )
     
-
     def test_invalid_transaction_type_raise_error(self):
         with self.assertRaises(ValueError):
             InventoryTransaction.objects.create(
@@ -205,3 +204,15 @@ class TransactionTestCase(TestCase):
                 transaction_type="asdf",
             )
 
+    def test_stock_cannot_be_negative_due_to_transactions(self):
+        transaction = InventoryTransaction.objects.create(
+            item=self.item,
+            user=self.user,
+            quantity=2,
+            transaction_type=InventoryTransaction.REMOVE,
+        )
+        transaction.quantity = 10
+        with self.assertRaises(ValueError):
+            transaction.save()
+            transaction.quantity = -2
+            transaction.save()
