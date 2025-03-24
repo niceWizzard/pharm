@@ -91,6 +91,31 @@ class SubcategoryType(models.TextChoices):
     JOINT_HEALTH = "Joint Health", "Joint Health"
     ENERGY_ENDURANCE = "Energy & Endurance", "Energy & Endurance"
 
+class PackagingType(models.TextChoices):
+    BOTTLE = "bottle", "Bottle"
+    BLISTER_PACK = "blister_pack", "Blister Pack"
+    BOX = "box", "Box"
+    PACK = "pack", "Pack"
+    ROLL = "roll", "Roll"
+    TUBE = "tube", "Tube"
+    BAR = "bar", "Bar"
+    ONE_BOX = "1_box", "1 box"
+    HUNDRED_PER_PACK = "100_per_pack", "100's per pack"
+    ONE_ROLL = "1_roll", "1 roll"
+    ONE_TUBE = "1_tube", "1 tube"
+    ONE_BOTTLE = "1_bottle", "1 bottle"
+    ONE_BAR = "1_bar", "1 bar"
+    ONE_KIT = "1_kit", "1 kit"
+    TWENTY_PER_BOTTLE = "20_per_bottle", "20's per bottle"
+    HUNDRED_ML_BOTTLE = "100ml_bottle", "100mL bottle"
+    TEN_PER_BLISTER = "10_per_blister", "10's per blister"
+    ONE_UNIT = "1_unit", "1 unit"
+    SIX_PER_BLISTER = "6_per_blister", "6's per blister"
+    TEN_ML_VIAL = "10ml_vial", "10mL vial"
+    JAR = "jar", "Jar"
+    THIRTY_PER_BOTTLE = "30_per_bottle", "30's per bottle"
+    SIXTY_PER_BOTTLE = "60_per_bottle", "60's per bottle"
+
 # Create your models here.
 class InventoryItem(models.Model):
     id = models.CharField(primary_key=True, default=uuid.uuid4, max_length=128)
@@ -108,7 +133,10 @@ class InventoryItem(models.Model):
     generic_name = models.CharField(max_length=128)
     dosage_form = models.CharField(max_length=32)
     strength_per_size = models.CharField(max_length=32, null=True, default=None)
-    packaging = models.CharField(max_length=32)
+    packaging = models.CharField(
+        max_length=32, 
+        choices=PackagingType.choices
+    )
     quantity = models.IntegerField()
     unit_size = models.CharField(
         max_length=16,
@@ -123,6 +151,8 @@ class InventoryItem(models.Model):
             raise ValidationError(f"Invalid Category type: {self.category}")
         if self.subcategory not in SubcategoryType.values:
             raise ValidationError(f"Invalid Subcategory type: {self.subcategory}")
+        if self.packaging not in PackagingType.values:
+            raise ValidationError(f"Invalid Packaging type: {self.packaging}")
     def save(self, *args, **kwargs):
         self.clean()  # Call validation before saving
         super().save(*args, **kwargs)

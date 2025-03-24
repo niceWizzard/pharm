@@ -2,7 +2,7 @@ import datetime
 import uuid
 from django.test import TestCase
 from django.core.exceptions import ValidationError
-from medicines.models import CategoryType, InventoryItem, InventoryStock, InventoryTransaction, SubcategoryType, UnitType
+from medicines.models import CategoryType, InventoryItem, InventoryStock, InventoryTransaction, PackagingType, SubcategoryType, UnitType
 from users.models import CustomUser
 
 def create_test_item(self):
@@ -15,7 +15,7 @@ def create_test_item(self):
         generic_name="Magnesium Hydroxide",
         dosage_form="Liquid",
         strength_per_size="400mg/5ml",
-        packaging="Bottle",
+        packaging=PackagingType.BOTTLE,
         quantity=120,
         unit_size=UnitType.ML,
     )
@@ -53,7 +53,7 @@ class ItemTestCase(TestCase):
                 generic_name="Magnesium Hydroxide",
                 dosage_form="Liquid",
                 strength_per_size="400mg/5ml",
-                packaging="Bottle",
+                packaging=PackagingType.BOTTLE,
                 quantity=120,
                 unit_size="lkjsdf",
             )
@@ -68,7 +68,7 @@ class ItemTestCase(TestCase):
                 generic_name="Magnesium Hydroxide",
                 dosage_form="Liquid",
                 strength_per_size="400mg/5ml",
-                packaging="Bottle",
+                packaging=PackagingType.BOTTLE,
                 quantity=120,
                 unit_size=UnitType.EACH,  
             )
@@ -87,6 +87,20 @@ class ItemTestCase(TestCase):
                 unit_size=UnitType.EACH,  
             )
 
+    def test_invalid_packaging_type_raise_error(self):
+        with self.assertRaises(ValidationError):
+            InventoryItem.objects.create(
+                category="SOME INVALID CATEOGRY",
+                subcategory=SubcategoryType.ANTACID,
+                item_name="Magnesium Hydroxide",
+                brand_name="Phillips' Milk of Magnesia",
+                generic_name="Magnesium Hydroxide",
+                dosage_form="Liquid",
+                strength_per_size="400mg/5ml",
+                packaging="INVALID LPACKAGING TYPE",
+                quantity=120,
+                unit_size=UnitType.EACH,  
+            )
 
 class TransactionTestCase(TestCase):
     def setUp(self):
