@@ -2,6 +2,7 @@ import uuid
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.forms import ValidationError
 
 User = get_user_model()
 
@@ -43,6 +44,13 @@ class InventoryItem(models.Model):
     date_of_delivery = models.DateField(auto_now_add=True)
     expiration_date = models.DateField()
     stocks = models.PositiveIntegerField(default=0)
+
+    def clean(self):
+        if self.unit_size not in UnitType.values:
+            raise ValidationError(f"Invalid unit type: {self.unit_size}")
+    def save(self, *args, **kwargs):
+        self.clean()  # Call validation before saving
+        super().save(*args, **kwargs)
 
 
 class InventoryTransaction(models.Model):

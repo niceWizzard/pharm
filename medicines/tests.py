@@ -33,6 +33,23 @@ class ItemTestCase(TestCase):
     def test_default_stock_value(self):
         """Ensure stocks are initialized correctly"""
         self.assertEqual(self.item.stocks, 5)
+    
+    def test_invalid_unit_type_raise_error(self):
+        with self.assertRaises(ValidationError):
+            InventoryItem.objects.create(
+                category="Antacids",
+                subcategory="Antacid",
+                item_name="Magnesium Hydroxide",
+                brand_name="Phillips' Milk of Magnesia",
+                generic_name="Magnesium Hydroxide",
+                dosage_form="Liquid",
+                strength_per_size="400mg/5ml",
+                packaging="Bottle",
+                quantity=120,
+                unit_size="Invalid Type!",  
+                expiration_date="2025-12-31",
+            )
+
 
 class TransactionTestCase(TestCase):
     def setUp(self):
