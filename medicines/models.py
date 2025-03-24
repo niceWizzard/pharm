@@ -42,7 +42,7 @@ class InventoryItem(models.Model):
     )
     date_of_delivery = models.DateField(auto_now_add=True)
     expiration_date = models.DateField()
-    stocks = models.PositiveIntegerField()
+    stocks = models.PositiveIntegerField(default=0)
 
 
 class InventoryTransaction(models.Model):
