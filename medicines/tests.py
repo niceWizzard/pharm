@@ -88,7 +88,6 @@ class ItemTestCase(TestCase):
             )
 
 
-
 class TransactionTestCase(TestCase):
     def setUp(self):
         """Set up an inventory item and user for transactions"""
@@ -222,3 +221,47 @@ class TransactionTestCase(TestCase):
             transaction.save()
             transaction.quantity = -2
             transaction.save()
+    
+
+class InventoryStockTestCase(TestCase):
+    def setUp(self):
+        """Set up an inventory item for testing"""
+        create_test_item(self)
+        create_test_stock(self)
+
+    def deletion_of_item_cascades(self):
+        self.assertEqual(
+            InventoryStock.objects.all().count(),
+            1
+        )
+        self.item.delete()
+        self.assertEqual(
+            InventoryStock.objects.all().count(),
+            0
+        )
+    def test_cannot_add_expired_stock(self):
+        """Ensure that adding stock with a past expiration date raises an error"""
+        with self.assertRaises(ValidationError):
+            InventoryStock.objects.create(
+                item=self.item,
+                expiration_date=datetime.date.today() - datetime.timedelta(days=1),
+                count=5
+            )
+
+    def test_can_update_expired_stock(self):
+        """Ensure modifying stock for an expired item is allowed"""
+        self.stocks.expiration_date = datetime.date.today() - datetime.timedelta(days=1)
+        self.stocks.count = 5
+        self.stocks.save()
+        self.assertEqual(InventoryStock.objects.get(id=self.stocks.id).count, 5)
+
+    def test_cannot_have_duplicate_expiration_date(self):
+        """Ensure that adding duplicate stock entries for the same expiration date raises an error"""
+        with self.assertRaises(Exception):
+            InventoryStock.objects.create(
+                item=self.item,
+                expiration_date=self.stock.expiration_date,
+                count=5
+            )
+
+

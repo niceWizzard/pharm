@@ -1,4 +1,6 @@
+import datetime
 import uuid
+import django
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -128,10 +130,22 @@ class InventoryItem(models.Model):
 class InventoryStock(models.Model):
     id=models.AutoField(primary_key=True)
     item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE)
-    date_of_delivery = models.DateField(auto_now_add=True)
-    expiration_date = models.DateField()
+    date_of_delivery = models.DateField(default=django.utils.timezone.now)
+    expiration_date = models.DateField(default=django.utils.timezone.now)
     count = models.PositiveIntegerField(default=0)
 
+    class Meta:
+        unique_together = ("item", "expiration_date")  # Prevent duplicate stock entries with the same expiration date.
+
+    def clean(self):
+        """Validation before saving."""
+        if not self.pk and self.expiration_date < datetime.date.today():
+            raise ValidationError("Cannot add stock with an expiration date in the past.")
+
+    @transaction.atomic
+    def save(self, *args, **kwargs):
+        self.clean()  # Ensure validations run before saving
+        super().save(*args, **kwargs)
 
 class InventoryTransaction(models.Model):
     ADD = "add"
