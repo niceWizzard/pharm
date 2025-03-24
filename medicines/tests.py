@@ -5,25 +5,28 @@ from django.core.exceptions import ValidationError
 from medicines.models import CategoryType, InventoryItem, InventoryTransaction, SubcategoryType, UnitType
 from users.models import CustomUser
 
+def create_test_item(self):
+    self.item = InventoryItem.objects.create(
+        id=str(uuid.uuid4()),  # Ensure a valid UUID
+        category=CategoryType.ANTACIDS,
+        subcategory=SubcategoryType.ANTACID,
+        item_name="Magnesium Hydroxide",
+        brand_name="Phillips' Milk of Magnesia",
+        generic_name="Magnesium Hydroxide",
+        dosage_form="Liquid",
+        strength_per_size="400mg/5ml",
+        packaging="Bottle",
+        quantity=120,
+        unit_size=UnitType.ML,
+        date_of_delivery=datetime.date.today(),
+        expiration_date=datetime.date.today(),
+        stocks=5
+    )
+
 class ItemTestCase(TestCase):
     def setUp(self):
         """Set up an inventory item for testing"""
-        self.item = InventoryItem.objects.create(
-            id=str(uuid.uuid4()),  # Ensure a valid UUID
-            category=CategoryType.ANTACIDS,
-            subcategory=SubcategoryType.ANTACID,
-            item_name="Magnesium Hydroxide",
-            brand_name="Phillips' Milk of Magnesia",
-            generic_name="Magnesium Hydroxide",
-            dosage_form="Liquid",
-            strength_per_size="400mg/5ml",
-            packaging="Bottle",
-            quantity=120,
-            unit_size=UnitType.ML,
-            date_of_delivery=datetime.date.today(),
-            expiration_date=datetime.date.today(),
-            stocks=5
-        )
+        create_test_item(self)
 
     def test_item_exists(self):
         """Test if an item exists in the database"""
@@ -54,22 +57,7 @@ class ItemTestCase(TestCase):
 class TransactionTestCase(TestCase):
     def setUp(self):
         """Set up an inventory item and user for transactions"""
-        self.item = InventoryItem.objects.create(
-            id=str(uuid.uuid4()),  # Ensure a valid UUID
-            category=CategoryType.ANTACIDS,
-            subcategory=SubcategoryType.ANTACID,
-            item_name="Magnesium Hydroxide",
-            brand_name="Phillips' Milk of Magnesia",
-            generic_name="Magnesium Hydroxide",
-            dosage_form="Liquid",
-            strength_per_size="400mg/5ml",
-            packaging="Bottle",
-            quantity=120,
-            unit_size=UnitType.ML,
-            date_of_delivery=datetime.date.today(),
-            expiration_date=datetime.date.today(),
-            stocks=5
-        )
+        create_test_item(self)
         self.user = CustomUser.objects.create_user(
             email="test_email@example.com",
             password="1234"
