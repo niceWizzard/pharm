@@ -53,7 +53,36 @@ class ItemTestCase(TestCase):
                 expiration_date="2025-12-31",
             )
 
-
+    def test_invalid_category_type_raise_error(self):
+        with self.assertRaises(ValidationError):
+            InventoryItem.objects.create(
+                category="SOME INVALID CATEOGRY",
+                subcategory=SubcategoryType.ANTACID,
+                item_name="Magnesium Hydroxide",
+                brand_name="Phillips' Milk of Magnesia",
+                generic_name="Magnesium Hydroxide",
+                dosage_form="Liquid",
+                strength_per_size="400mg/5ml",
+                packaging="Bottle",
+                quantity=120,
+                unit_size=UnitType.EACH,  
+                expiration_date="2025-12-31",
+            )
+    def test_invalid_subcategory_type_raise_error(self):
+        with self.assertRaises(ValidationError):
+            InventoryItem.objects.create(
+                category=CategoryType.ANTACIDS,
+                subcategory="SOME INVALID SUBCATEGORY",
+                item_name="Magnesium Hydroxide",
+                brand_name="Phillips' Milk of Magnesia",
+                generic_name="Magnesium Hydroxide",
+                dosage_form="Liquid",
+                strength_per_size="400mg/5ml",
+                packaging="Bottle",
+                quantity=120,
+                unit_size=UnitType.EACH,  
+                expiration_date="2025-12-31",
+            )
 class TransactionTestCase(TestCase):
     def setUp(self):
         """Set up an inventory item and user for transactions"""

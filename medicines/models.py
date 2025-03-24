@@ -120,6 +120,10 @@ class InventoryItem(models.Model):
     def clean(self):
         if self.unit_size not in UnitType.values:
             raise ValidationError(f"Invalid unit type: {self.unit_size}")
+        if self.category not in CategoryType.values:
+            raise ValidationError(f"Invalid Category type: {self.category}")
+        if self.subcategory not in SubcategoryType.values:
+            raise ValidationError(f"Invalid Subcategory type: {self.subcategory}")
     def save(self, *args, **kwargs):
         self.clean()  # Call validation before saving
         super().save(*args, **kwargs)
