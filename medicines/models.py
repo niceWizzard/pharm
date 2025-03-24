@@ -113,9 +113,6 @@ class InventoryItem(models.Model):
         choices=UnitType.choices,
         default=UnitType.EACH,
     )
-    date_of_delivery = models.DateField(auto_now_add=True)
-    expiration_date = models.DateField()
-    stocks = models.PositiveIntegerField(default=0)
 
     def clean(self):
         if self.unit_size not in UnitType.values:
@@ -128,11 +125,18 @@ class InventoryItem(models.Model):
         self.clean()  # Call validation before saving
         super().save(*args, **kwargs)
 
+class InventoryStock(models.Model):
+    id=models.AutoField(primary_key=True)
+    item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE)
+    date_of_delivery = models.DateField(auto_now_add=True)
+    expiration_date = models.DateField()
+    count = models.PositiveIntegerField(default=0)
+
 
 class InventoryTransaction(models.Model):
     ADD = "add"
     REMOVE = "remove"
-    item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE)
+    item_stock = models.ForeignKey(InventoryStock, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     quantity = models.IntegerField()
     transaction_type = models.CharField(
@@ -148,24 +152,24 @@ class InventoryTransaction(models.Model):
             # Reverse previous transaction effect
             match old_transaction.transaction_type:
                 case self.ADD:
-                    self.item.stocks -= old_transaction.quantity
+                    self.item_stock.count -= old_transaction.quantity
                 case self.REMOVE:
-                    self.item.stocks += old_transaction.quantity
+                    self.item_stock.count += old_transaction.quantity
                 case _:
                     raise ValueError(f"Invalid transaction type: {self.transaction_type}")
 
         # Apply new transaction effect
         match self.transaction_type:
             case self.ADD:
-                self.item.stocks += self.quantity
+                self.item_stock.count += self.quantity
             case self.REMOVE:
-                if self.item.stocks < self.quantity:
+                if self.item_stock.count < self.quantity:
                     raise ValueError("Not enough stock available")
-                self.item.stocks -= self.quantity
+                self.item_stock.count -= self.quantity
             case _:
                 raise ValueError(f"Invalid transaction type: {self.transaction_type}")
 
-        self.item.save()
+        self.item_stock.save()
         super().save(*args, **kwargs)
     
     @transaction.atomic
@@ -173,12 +177,12 @@ class InventoryTransaction(models.Model):
         """Revert stock changes when transaction is deleted."""
         match self.transaction_type:
             case self.ADD:
-                self.item.stocks -= self.quantity  # Remove added stock
+                self.item_stock.count -= self.quantity  # Remove added stock
             case self.REMOVE:
-                self.item.stocks += self.quantity  # Restore removed stock
+                self.item_stock.count += self.quantity  # Restore removed stock
             case _:
                 raise ValueError(f"Invalid transaction type: {self.transaction_type}")
 
 
-        self.item.save()  # Update stock in database
+        self.item_stock.save()  # Update stock in database
         super().delete(*args, **kwargs)
