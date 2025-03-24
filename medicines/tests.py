@@ -2,7 +2,7 @@ import datetime
 import uuid
 from django.test import TestCase
 from django.core.exceptions import ValidationError
-from medicines.models import InventoryItem, InventoryTransaction, UnitType
+from medicines.models import CategoryType, InventoryItem, InventoryTransaction, SubcategoryType, UnitType
 from users.models import CustomUser
 
 class ItemTestCase(TestCase):
@@ -10,8 +10,8 @@ class ItemTestCase(TestCase):
         """Set up an inventory item for testing"""
         self.item = InventoryItem.objects.create(
             id=str(uuid.uuid4()),  # Ensure a valid UUID
-            category="Antacids",
-            subcategory="Antacid",
+            category=CategoryType.ANTACIDS,
+            subcategory=SubcategoryType.ANTACID,
             item_name="Magnesium Hydroxide",
             brand_name="Phillips' Milk of Magnesia",
             generic_name="Magnesium Hydroxide",
@@ -37,8 +37,8 @@ class ItemTestCase(TestCase):
     def test_invalid_unit_type_raise_error(self):
         with self.assertRaises(ValidationError):
             InventoryItem.objects.create(
-                category="Antacids",
-                subcategory="Antacid",
+                category=CategoryType.ANTACIDS,
+                subcategory=SubcategoryType.ANTACID,
                 item_name="Magnesium Hydroxide",
                 brand_name="Phillips' Milk of Magnesia",
                 generic_name="Magnesium Hydroxide",
@@ -56,8 +56,8 @@ class TransactionTestCase(TestCase):
         """Set up an inventory item and user for transactions"""
         self.item = InventoryItem.objects.create(
             id=str(uuid.uuid4()),  # Ensure a valid UUID
-            category="Antacids",
-            subcategory="Antacid",
+            category=CategoryType.ANTACIDS,
+            subcategory=SubcategoryType.ANTACID,
             item_name="Magnesium Hydroxide",
             brand_name="Phillips' Milk of Magnesia",
             generic_name="Magnesium Hydroxide",

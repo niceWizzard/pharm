@@ -24,11 +24,83 @@ class UnitType(models.TextChoices):
     SOFTGELS = "Softgels", "Softgels"
     TABLET = "Tablet", "Tablet"  # Singular form
 
+class CategoryType(models.TextChoices):
+    ANTACIDS = "Antacids", "Antacids"
+    COUGH_AND_COLD = "Cough and Cold", "Cough and Cold"
+    DIGESTIVE_HEALTH = "Digestive Health", "Digestive Health"
+    EYE_CARE = "Eye Care", "Eye Care"
+    MEDICAL_SUPPLIES = "Medical Supplies & Personal Care", "Medical Supplies & Personal Care"
+    MEDICAL_SUPPLIES_ALT = "Medical Supplies and Personal Care Products", "Medical Supplies and Personal Care Products"
+    OTC_MEDICINES = "Over-the-Counter (OTC) Medicines", "Over-the-Counter (OTC) Medicines"
+    PAIN_RELIEVERS = "Pain Relievers", "Pain Relievers"
+    PHARMACY_EQUIPMENT = "Pharmacy Machineries and Equipment", "Pharmacy Machineries and Equipment"
+    PRESCRIPTION_MEDICINES = "Prescription Medicines", "Prescription Medicines"
+    SKIN_CARE = "Skin Care", "Skin Care"
+    TOPICAL_TREATMENTS = "Topical Treatments", "Topical Treatments"
+    VITAMINS_SUPPLEMENTS = "Vitamins and Supplements", "Vitamins and Supplements"
+
+class SubcategoryType(models.TextChoices):
+    ANTACID = "Antacid", "Antacid"
+    DECONGESTANTS = "Decongestants", "Decongestants"
+    EXPECTORANTS = "Expectorants", "Expectorants"
+    ANTIHISTAMINES = "Antihistamines", "Antihistamines"
+    ANTITUSSIVES = "Antitussives", "Antitussives"
+    LAXATIVES = "Laxatives", "Laxatives"
+    LUBRICATING_DROPS = "Lubricating Drops", "Lubricating Drops"
+    FIRST_AID_SUPPLIES = "First Aid Supplies", "First Aid Supplies"
+    PERSONAL_HYGIENE = "Personal Hygiene", "Personal Hygiene"
+    SKIN_CARE = "Skin Care", "Skin Care"
+    INCONTINENCE_CARE = "Incontinence Care", "Incontinence Care"
+    BABY_CARE = "Baby Care", "Baby Care"
+    EYE_CARE = "Eye Care", "Eye Care"
+    MEDICAL_SUPPLIES = "Medical Supplies", "Medical Supplies"
+    BANDAGES_AND_DRESSINGS = "Bandages and Dressings", "Bandages and Dressings"
+    FIRST_AID_KITS = "First Aid Kits", "First Aid Kits"
+    PAIN_RELIEVERS = "Pain Relievers", "Pain Relievers"
+    COUGH_AND_COLD_REMEDIES = "Cough and Cold Remedies", "Cough and Cold Remedies"
+    ANALGESICS = "Analgesics", "Analgesics"
+    BLOOD_PRESSURE_MONITORS = "Blood Pressure Monitors", "Blood Pressure Monitors"
+    THERMOMETERS = "Thermometers", "Thermometers"
+    NEBULIZERS = "Nebulizers", "Nebulizers"
+    OXYGEN_EQUIPMENT = "Oxygen Equipment", "Oxygen Equipment"
+    PULSE_OXIMETERS = "Pulse Oximeters", "Pulse Oximeters"
+    SURGICAL_INSTRUMENTS = "Surgical Instruments", "Surgical Instruments"
+    ANTIBIOTICS = "Antibiotics", "Antibiotics"
+    ANTIHYPERTENSIVES = "Antihypertensives", "Antihypertensives"
+    ANTI_DIABETIC_MEDICATIONS = "Anti-Diabetic Medications", "Anti-Diabetic Medications"
+    SUNSCREEN = "Sunscreen", "Sunscreen"
+    MOISTURIZER = "Moisturizer", "Moisturizer"
+    ACNE_TREATMENT = "Acne Treatment", "Acne Treatment"
+    ANTI_FUNGAL = "Anti-fungal", "Anti-fungal"
+    ANTI_INFLAMMATORY = "Anti-inflammatory", "Anti-inflammatory"
+    PAIN_RELIEF = "Pain Relief", "Pain Relief"
+    MULTIVITAMINS = "Multivitamins", "Multivitamins"
+    VITAMIN_C = "Vitamin C", "Vitamin C"
+    OMEGA_3_FATTY_ACIDS = "Omega-3 Fatty Acids", "Omega-3 Fatty Acids"
+    IRON_SUPPLEMENTS = "Iron Supplements", "Iron Supplements"
+    VITAMIN_D = "Vitamin D", "Vitamin D"
+    VITAMIN_B_COMPLEX = "Vitamin B Complex", "Vitamin B Complex"
+    VITAMIN_E = "Vitamin E", "Vitamin E"
+    CALCIUM = "Calcium", "Calcium"
+    IRON = "Iron", "Iron"
+    OMEGA_3 = "Omega-3", "Omega-3"
+    PROBIOTICS = "Probiotics", "Probiotics"
+    HERBAL_SUPPLEMENTS = "Herbal Supplements", "Herbal Supplements"
+    JOINT_HEALTH = "Joint Health", "Joint Health"
+    ENERGY_ENDURANCE = "Energy & Endurance", "Energy & Endurance"
+
 # Create your models here.
 class InventoryItem(models.Model):
     id = models.CharField(primary_key=True, default=uuid.uuid4, max_length=128)
-    category = models.CharField(max_length=32)
-    subcategory = models.CharField(max_length=32)
+    category = models.CharField(
+        max_length=64,
+        choices=CategoryType.choices,
+        default=CategoryType.OTC_MEDICINES,
+    )
+    subcategory = models.CharField(
+        max_length=64,
+        choices=SubcategoryType.choices,
+    )
     item_name = models.CharField(max_length=128)
     brand_name = models.CharField(max_length=128)
     generic_name = models.CharField(max_length=128)
